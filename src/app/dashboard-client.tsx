@@ -2,7 +2,7 @@
 
 import { useInventory } from '@/context/inventory-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Package, TrendingUp, AlertCircle, ShoppingCart, ListChecks, Printer, Archive, CircleDollarSign, PackageSearch, PlusCircle } from 'lucide-react';
+import { DollarSign, Package, TrendingUp, AlertCircle, ShoppingCart, ListChecks, Printer, Archive, CircleDollarSign, PackageSearch, PlusCircle, MinusCircle, TrendingDown } from 'lucide-react';
 import type { Product, Sale } from '@/lib/inventory';
 import { ReceiptDialog } from './pos/receipt-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -14,12 +14,13 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
 export function DashboardClient() {
-  const { capital, dailyProfit, monthlyProfit, products, sales, totalRevenue, costOfGoodsSold, addFunds } = useInventory();
+  const { capital, dailyProfit, monthlyProfit, products, sales, totalRevenue, costOfGoodsSold, addFunds, addLoss, dailyLosses } = useInventory();
   const { toast } = useToast();
   
   const latestSalesRef = useRef<HTMLDivElement>(null);
   const wantedProductsRef = useRef<HTMLDivElement>(null);
   const [fundsToAdd, setFundsToAdd] = useState(0);
+  const [lossToRecord, setLossToRecord] = useState(0);
 
   const lowStockProducts = products.filter(p => p.quantity < 2);
   const recentSales = sales.slice(-5).reverse();
@@ -48,11 +49,23 @@ export function DashboardClient() {
         setFundsToAdd(0);
     }
   };
+  
+  const handleAddLoss = () => {
+    if (lossToRecord > 0) {
+        addLoss(lossToRecord);
+        toast({
+            variant: 'destructive',
+            title: 'تم تسجيل الخسارة',
+            description: `تم خصم ${lossToRecord.toFixed(2)} دولار من الأرباح.`,
+        });
+        setLossToRecord(0);
+    }
+  };
 
 
   return (
     <div className="grid gap-4 lg:grid-cols-4">
-      <div className="lg:col-span-4 grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+      <div className="lg:col-span-4 grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">رأس المال</CardTitle>
@@ -137,6 +150,29 @@ export function DashboardClient() {
                 </div>
                 <Button size="sm" className="w-full mt-2" onClick={handleAddFunds}>
                     إضافة إلى رأس المال
+                </Button>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <MinusCircle className="h-4 w-4 text-muted-foreground" />
+                    تسجيل خسارة
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col justify-between h-[calc(100%-4rem)]">
+                <div className='flex gap-2 items-center'>
+                    <Input 
+                        type="number" 
+                        value={lossToRecord}
+                        onChange={(e) => setLossToRecord(parseFloat(e.target.value) || 0)}
+                        placeholder="0.00"
+                        className="h-9"
+                    />
+                     <span className="font-bold text-muted-foreground">$</span>
+                </div>
+                <Button variant="destructive" size="sm" className="w-full mt-2" onClick={handleAddLoss}>
+                    تسجيل الخسارة
                 </Button>
             </CardContent>
         </Card>
