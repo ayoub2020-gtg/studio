@@ -31,6 +31,14 @@ export type Repair = {
   completionDate?: Date | null;
 }
 
+export type PrintJob = {
+  id: string;
+  price: number;
+  cost: number;
+  profit: number;
+  date: Date;
+}
+
 export const initialProducts: Product[] = [
   {
     id: '1',

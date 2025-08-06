@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
-import { initialProducts, type Product, type Sale, type Repair } from '@/lib/inventory';
+import { initialProducts, type Product, type Sale, type Repair, type PrintJob } from '@/lib/inventory';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle } from 'lucide-react';
 import { isToday, isThisMonth } from 'date-fns';
@@ -24,8 +24,10 @@ interface InventoryContextType {
   products: Product[];
   sales: Sale[];
   repairs: Repair[];
+  printJobs: PrintJob[];
   addProduct: (product: Omit<Product, 'id' | 'purchasePrice'> & { purchasePrice: number }) => void;
   addRepair: (repair: Omit<Repair, 'id' | 'creationDate'>) => void;
+  addPrintJob: (printJob: Omit<PrintJob, 'id' | 'date' | 'profit'>) => void;
   updateRepairStatus: (repairId: string, status: Repair['status']) => void;
   findProduct: (searchTerm: string) => Product | undefined;
   processSale: (cart: CartItem[]) => void;
@@ -34,6 +36,7 @@ interface InventoryContextType {
   capital: number;
   dailyProfit: number;
   monthlyProfit: number;
+  dailyPrintingProfit: number;
   totalRevenue: number;
   costOfGoodsSold: number;
   dailyLosses: number;
@@ -45,6 +48,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [sales, setSales] = useState<Sale[]>([]);
   const [repairs, setRepairs] = useState<Repair[]>([]);
+  const [printJobs, setPrintJobs] = useState<PrintJob[]>([]);
   const [manualFunds, setManualFunds] = useState<ManualFund[]>([]);
   const [losses, setLosses] = useState<Loss[]>([]);
   const { toast } = useToast();
@@ -70,10 +74,26 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       return [...prevRepairs, newRepair];
     });
   }, []);
+
+  const addPrintJob = useCallback((newPrintJobData: Omit<PrintJob, 'id' | 'date' | 'profit'>) => {
+    setPrintJobs((prevJobs) => {
+      const newJob: PrintJob = {
+        ...newPrintJobData,
+        id: (prevJobs.length + 1).toString() + Date.now(),
+        date: new Date(),
+        profit: newPrintJobData.price - newPrintJobData.cost,
+      };
+      return [...prevJobs, newJob];
+    });
+    toast({
+      title: 'تم تسجيل خدمة الطباعة',
+      description: `تم تحقيق ربح قدره ${(newPrintJobData.price - newPrintJobData.cost).toFixed(2)} دولار.`,
+    })
+  }, [toast]);
   
   const updateRepairStatus = useCallback((repairId: string, status: Repair['status']) => {
-    let repairCost = 0;
     let shouldToast = false;
+    let repairCost = 0;
 
     setRepairs(prevRepairs => {
       const updatedRepairs = prevRepairs.map(repair => {
@@ -184,6 +204,12 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       .reduce((acc, loss) => acc + loss.amount, 0);
   }, [losses]);
 
+  const dailyPrintingProfit = useMemo(() => {
+    return printJobs
+      .filter(job => isToday(job.date))
+      .reduce((acc, job) => acc + job.profit, 0);
+  }, [printJobs]);
+
   const dailyProfit = useMemo(() => {
     const salesProfit = sales
         .filter(sale => isToday(sale.date))
@@ -205,14 +231,17 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     const repairsProfit = repairs
         .filter(repair => repair.status === 'Completed' && repair.completionDate && isThisMonth(repair.completionDate))
         .reduce((acc, repair) => acc + repair.cost, 0);
+    const printingProfit = printJobs
+        .filter(job => isThisMonth(job.date))
+        .reduce((acc, job) => acc + job.profit, 0);
     const fundsThisMonth = manualFunds
         .filter(fund => isThisMonth(fund.date))
         .reduce((acc, fund) => acc + fund.amount, 0);
     const lossesThisMonth = losses
         .filter(loss => isThisMonth(loss.date))
         .reduce((acc, loss) => acc + loss.amount, 0);
-    return salesProfit + repairsProfit + fundsThisMonth - lossesThisMonth;
-  }, [sales, repairs, manualFunds, losses]);
+    return salesProfit + repairsProfit + printingProfit + fundsThisMonth - lossesThisMonth;
+  }, [sales, repairs, printJobs, manualFunds, losses]);
 
   const totalManualFunds = useMemo(() => {
     return manualFunds.reduce((acc, fund) => acc + fund.amount, 0);
@@ -221,8 +250,9 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   const totalRevenue = useMemo(() => {
     const salesRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
     const repairsRevenue = repairs.filter(r => r.status === 'Completed').reduce((acc, repair) => acc + repair.cost, 0);
-    return salesRevenue + repairsRevenue + totalManualFunds;
-  }, [sales, repairs, totalManualFunds]);
+    const printingRevenue = printJobs.reduce((acc, job) => acc + job.price, 0);
+    return salesRevenue + repairsRevenue + printingRevenue + totalManualFunds;
+  }, [sales, repairs, printJobs, totalManualFunds]);
   
   const totalLosses = useMemo(() => {
     return losses.reduce((acc, loss) => acc + loss.amount, 0);
@@ -230,12 +260,13 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
   const capital = useMemo(() => {
     const inventoryValue = products.reduce((acc, product) => acc + (product.purchasePrice * product.quantity), 0);
-    return inventoryValue + totalRevenue - costOfGoodsSold - totalLosses;
-  }, [products, totalRevenue, costOfGoodsSold, totalLosses]);
+    const printingCosts = printJobs.reduce((acc, job) => acc + job.cost, 0);
+    return inventoryValue + totalRevenue - costOfGoodsSold - printingCosts - totalLosses;
+  }, [products, totalRevenue, costOfGoodsSold, printJobs, totalLosses]);
 
 
   return (
-    <InventoryContext.Provider value={{ products, sales, repairs, addProduct, addRepair, updateRepairStatus, findProduct, processSale, addFunds, addLoss, capital, dailyProfit, monthlyProfit, totalRevenue, costOfGoodsSold, dailyLosses }}>
+    <InventoryContext.Provider value={{ products, sales, repairs, printJobs, addProduct, addRepair, addPrintJob, updateRepairStatus, findProduct, processSale, addFunds, addLoss, capital, dailyProfit, monthlyProfit, dailyPrintingProfit, totalRevenue, costOfGoodsSold, dailyLosses }}>
       {children}
     </InventoryContext.Provider>
   );

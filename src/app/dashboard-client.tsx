@@ -14,13 +14,15 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
 export function DashboardClient() {
-  const { capital, dailyProfit, monthlyProfit, products, sales, totalRevenue, costOfGoodsSold, addFunds, addLoss, dailyLosses } = useInventory();
+  const { capital, dailyProfit, monthlyProfit, products, sales, totalRevenue, costOfGoodsSold, addFunds, addLoss, dailyLosses, addPrintJob, dailyPrintingProfit } = useInventory();
   const { toast } = useToast();
   
   const latestSalesRef = useRef<HTMLDivElement>(null);
   const wantedProductsRef = useRef<HTMLDivElement>(null);
   const [fundsToAdd, setFundsToAdd] = useState(0);
   const [lossToRecord, setLossToRecord] = useState(0);
+  const [printPrice, setPrintPrice] = useState(0);
+  const [printCost, setPrintCost] = useState(0);
 
   const lowStockProducts = products.filter(p => p.quantity < 2);
   const recentSales = sales.slice(-5).reverse();
@@ -62,10 +64,18 @@ export function DashboardClient() {
     }
   };
 
+  const handleAddPrintJob = () => {
+    if (printPrice > 0 && printCost >= 0) {
+        addPrintJob({ price: printPrice, cost: printCost });
+        setPrintPrice(0);
+        setPrintCost(0);
+    }
+  }
+
 
   return (
     <div className="grid gap-4 lg:grid-cols-4">
-      <div className="lg:col-span-4 grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="lg:col-span-4 grid gap-4 md:grid-cols-2 lg:grid-cols-8">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">رأس المال</CardTitle>
@@ -100,6 +110,20 @@ export function DashboardClient() {
              <p className="text-xs text-muted-foreground">
                 إجمالي الربح المحقق هذا الشهر
             </p>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                ربح الطباعة اليومي
+                </CardTitle>
+                <Printer className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">${dailyPrintingProfit.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">
+                    إجمالي الربح من خدمات الطباعة اليوم
+                </p>
             </CardContent>
         </Card>
         <Card>
@@ -175,6 +199,44 @@ export function DashboardClient() {
                     تسجيل الخسارة
                 </Button>
             </CardContent>
+        </Card>
+      </div>
+      
+      <div className="lg:col-span-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Printer className="h-5 w-5" />
+              خدمة الطباعة
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid md:grid-cols-3 gap-4 items-end">
+             <div>
+                <label className="text-sm font-medium">سعر البيع</label>
+                <div className='flex gap-2 items-center mt-1'>
+                    <Input 
+                        type="number" 
+                        value={printPrice}
+                        onChange={(e) => setPrintPrice(parseFloat(e.target.value) || 0)}
+                        placeholder="0.00"
+                    />
+                    <span className="font-bold text-muted-foreground">$</span>
+                </div>
+             </div>
+             <div>
+                <label className="text-sm font-medium">التكلفة (حبر، ورق)</label>
+                <div className='flex gap-2 items-center mt-1'>
+                    <Input 
+                        type="number" 
+                        value={printCost}
+                        onChange={(e) => setPrintCost(parseFloat(e.target.value) || 0)}
+                        placeholder="0.00"
+                    />
+                    <span className="font-bold text-muted-foreground">$</span>
+                </div>
+             </div>
+             <Button onClick={handleAddPrintJob} className="w-full md:w-auto">تسجيل الخدمة</Button>
+          </CardContent>
         </Card>
       </div>
 
