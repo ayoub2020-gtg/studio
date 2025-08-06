@@ -88,16 +88,46 @@ body {
 }
 
 @media print {
-  body * {
+  body.printing * {
     visibility: hidden;
   }
-  .printable-area, .printable-area * {
+  .printing .printing-active,
+  .printing .printing-active * {
     visibility: visible;
   }
-  .printable-area {
+  .printing .printing-active {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .printing .not-printable {
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .printing .printable-area {
+    color: black;
+  }
+  .printing .printable-area .text-muted-foreground {
+    color: #666;
+  }
+   .printing .printable-area .font-medium {
+    font-weight: 500;
+  }
+  .printing .printable-area .badge {
+    border: 1px solid #000;
+  }
+  .printing .printable-area .badge-destructive {
+     background-color: #fee2e2;
+     color: #991b1b;
+     border-color: #fca5a5;
+  }
+}
+
+@media screen {
+  .printable-area {
+    /* Styles for screen only if needed */
   }
 }

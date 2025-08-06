@@ -2,18 +2,38 @@
 
 import { useInventory } from '@/context/inventory-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Package, TrendingUp, AlertCircle, ShoppingCart, ListChecks } from 'lucide-react';
+import { DollarSign, Package, TrendingUp, AlertCircle, ShoppingCart, ListChecks, Printer } from 'lucide-react';
 import type { Product, Sale } from '@/lib/inventory';
 import { ReceiptDialog } from './pos/receipt-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { useRef } from 'react';
 
 export function DashboardClient() {
   const { capital, dailyProfit, monthlyProfit, products, sales } = useInventory();
+  
+  const latestSalesRef = useRef<HTMLDivElement>(null);
+  const wantedProductsRef = useRef<HTMLDivElement>(null);
 
   const lowStockProducts = products.filter(p => p.quantity < 2);
   const recentSales = sales.slice(-5).reverse();
+
+  const handlePrint = (ref: React.RefObject<HTMLDivElement>) => {
+    const currentRef = ref.current;
+    if (currentRef) {
+        const printableArea = currentRef.querySelector('.printable-area');
+        if (printableArea) {
+            document.body.classList.add('printing');
+            printableArea.classList.add('printing-active');
+            window.print();
+            printableArea.classList.remove('printing-active');
+            document.body.classList.remove('printing');
+        }
+    }
+  };
+
 
   return (
     <div className="grid gap-4 lg:grid-cols-3">
@@ -57,16 +77,21 @@ export function DashboardClient() {
       </div>
 
       <div className="lg:col-span-2">
-        <Card>
-          <CardHeader>
+        <Card ref={latestSalesRef}>
+          <CardHeader className='flex-row items-center justify-between'>
             <CardTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
               أحدث المبيعات
             </CardTitle>
+             <Button variant="outline" size="sm" onClick={() => handlePrint(latestSalesRef)}>
+                <Printer className="ml-2 h-4 w-4" />
+                طباعة
+            </Button>
           </CardHeader>
           <CardContent>
+           <div className="printable-area">
             {recentSales.length > 0 ? (
-                <ScrollArea className="h-[300px]">
+                <ScrollArea className="h-[300px] not-printable">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -95,47 +120,54 @@ export function DashboardClient() {
                     <p>لا توجد مبيعات حديثة.</p>
                 </div>
             )}
+           </div>
           </CardContent>
         </Card>
       </div>
 
       <div>
-        <Card>
-          <CardHeader>
+        <Card ref={wantedProductsRef}>
+          <CardHeader className='flex-row items-center justify-between'>
             <CardTitle className="flex items-center gap-2">
               <ListChecks className="h-5 w-5" />
               المنتجات المطلوبة
             </CardTitle>
+            <Button variant="outline" size="sm" onClick={() => handlePrint(wantedProductsRef)}>
+                <Printer className="ml-2 h-4 w-4" />
+                طباعة
+            </Button>
           </CardHeader>
           <CardContent>
-            {lowStockProducts.length > 0 ? (
-                <ScrollArea className="h-[300px]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>المنتج</TableHead>
-                        <TableHead className="text-right">الكمية</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {lowStockProducts.map((product) => (
-                        <TableRow key={product.id}>
-                          <TableCell className="font-medium">{product.name}</TableCell>
-                          <TableCell className="text-right">
-                              <Badge variant="destructive" className="flex items-center gap-1 w-fit ml-auto">
-                                <AlertCircle className="h-3 w-3" /> {product.quantity}
-                              </Badge>
-                          </TableCell>
+            <div className="printable-area">
+                {lowStockProducts.length > 0 ? (
+                    <ScrollArea className="h-[300px] not-printable">
+                    <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead>المنتج</TableHead>
+                            <TableHead className="text-right">الكمية</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </ScrollArea>
-            ) : (
-                <div className="text-center text-muted-foreground py-12">
-                    <p>لا توجد منتجات منخفضة المخزون.</p>
-                </div>
-            )}
+                        </TableHeader>
+                        <TableBody>
+                        {lowStockProducts.map((product) => (
+                            <TableRow key={product.id}>
+                            <TableCell className="font-medium">{product.name}</TableCell>
+                            <TableCell className="text-right">
+                                <Badge variant="destructive" className="flex items-center gap-1 w-fit ml-auto">
+                                    <AlertCircle className="h-3 w-3" /> {product.quantity}
+                                </Badge>
+                            </TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                    </Table>
+                    </ScrollArea>
+                ) : (
+                    <div className="text-center text-muted-foreground py-12">
+                        <p>لا توجد منتجات منخفضة المخزون.</p>
+                    </div>
+                )}
+            </div>
           </CardContent>
         </Card>
       </div>
