@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
-import { initialProducts, type Product, type Sale } from '@/lib/inventory';
+import { initialProducts, type Product, type Sale, type Repair } from '@/lib/inventory';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle } from 'lucide-react';
 import { isToday, isThisMonth } from 'date-fns';
@@ -18,7 +18,9 @@ interface ManualFund {
 interface InventoryContextType {
   products: Product[];
   sales: Sale[];
+  repairs: Repair[];
   addProduct: (product: Omit<Product, 'id' | 'purchasePrice'> & { purchasePrice: number }) => void;
+  addRepair: (repair: Omit<Repair, 'id' | 'creationDate'>) => void;
   findProduct: (searchTerm: string) => Product | undefined;
   processSale: (cart: CartItem[]) => void;
   addFunds: (amount: number) => void;
@@ -34,6 +36,7 @@ const InventoryContext = createContext<InventoryContextType | undefined>(undefin
 export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [sales, setSales] = useState<Sale[]>([]);
+  const [repairs, setRepairs] = useState<Repair[]>([]);
   const [manualFunds, setManualFunds] = useState<ManualFund[]>([]);
   const { toast } = useToast();
 
@@ -45,6 +48,17 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
         purchasePrice: newProductData.purchasePrice,
       };
       return [...prevProducts, newProduct];
+    });
+  }, []);
+
+  const addRepair = useCallback((newRepairData: Omit<Repair, 'id' | 'creationDate'>) => {
+    setRepairs((prevRepairs) => {
+      const newRepair: Repair = {
+        ...newRepairData,
+        id: (prevRepairs.length + 1).toString() + Date.now(),
+        creationDate: new Date(),
+      };
+      return [...prevRepairs, newRepair];
     });
   }, []);
 
@@ -156,7 +170,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
 
   return (
-    <InventoryContext.Provider value={{ products, sales, addProduct, findProduct, processSale, addFunds, capital, dailyProfit, monthlyProfit, totalRevenue, costOfGoodsSold }}>
+    <InventoryContext.Provider value={{ products, sales, repairs, addProduct, addRepair, findProduct, processSale, addFunds, capital, dailyProfit, monthlyProfit, totalRevenue, costOfGoodsSold }}>
       {children}
     </InventoryContext.Provider>
   );

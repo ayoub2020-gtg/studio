@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Home, Package, PackagePlus, PanelLeft, LayoutDashboard, ShoppingCart } from 'lucide-react';
+import { Wrench, Package, PackagePlus, PanelLeft, LayoutDashboard, ShoppingCart } from 'lucide-react';
 import React from 'react';
 import { SidebarInset, SidebarTrigger } from './ui/sidebar';
 
@@ -21,6 +21,7 @@ const menuItems = [
   { href: '/pos', label: 'نقطة البيع', icon: ShoppingCart },
   { href: '/inventory', label: 'المخزون', icon: Package },
   { href: '/inventory/add', label: 'إضافة منتج', icon: PackagePlus },
+  { href: '/repairs', label: 'الإصلاحات', icon: Wrench },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {

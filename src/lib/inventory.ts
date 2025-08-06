@@ -19,6 +19,18 @@ export type Sale = {
     date: Date;
 }
 
+export type Repair = {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  device: string;
+  issueDescription: string;
+  status: 'Pending' | 'In Progress' | 'Completed' | 'Cancelled';
+  cost: number;
+  creationDate: Date;
+  completionDate?: Date | null;
+}
+
 export const initialProducts: Product[] = [
   {
     id: '1',
