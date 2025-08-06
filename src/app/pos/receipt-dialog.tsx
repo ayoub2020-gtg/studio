@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -7,11 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Separator } from '@/components/ui/separator';
 import type { Product, Sale } from '@/lib/inventory';
 import { Receipt } from 'lucide-react';
-import { useReactToPrint } from 'react-to-print';
-
-interface CartItem extends Product {
-  cartQuantity: number;
-}
 
 interface SaleLike {
     id?: string;
@@ -26,12 +20,12 @@ interface ReceiptDialogProps {
   sale: SaleLike;
 }
 
-const ReceiptToPrint = React.forwardRef<HTMLDivElement, ReceiptDialogProps>(({ sale }, ref) => {
+const ReceiptContent = ({ sale }: ReceiptDialogProps) => {
     const items = sale.cart || sale.items || [];
     const date = (sale as Sale).date ? new Date((sale as Sale).date) : new Date();
     
     return (
-        <div ref={ref} className="p-8 font-sans text-black">
+        <div className="p-8 font-sans text-black bg-white">
             <h2 className="text-2xl font-bold text-center mb-4">فاتورة البيع</h2>
             <p className="text-center mb-6">{date.toLocaleString('ar-DZ')}</p>
             <Separator className="my-4 bg-gray-400" />
@@ -51,17 +45,12 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, ReceiptDialogProps>(({ s
             <p className="text-center mt-8 text-sm">شكرا لزيارتكم!</p>
         </div>
     );
-});
-ReceiptToPrint.displayName = 'ReceiptToPrint';
-
+};
 
 export function ReceiptDialog({ sale }: ReceiptDialogProps) {
-    const componentRef = React.useRef<HTMLDivElement>(null);
-
-    const handlePrint = useReactToPrint({
-        content: () => componentRef.current,
-        documentTitle: `فاتورة - ${new Date().toISOString()}`,
-    });
+    const handlePrint = () => {
+        window.print();
+    };
 
   return (
     <Dialog>
@@ -71,35 +60,12 @@ export function ReceiptDialog({ sale }: ReceiptDialogProps) {
           عرض الفاتورة
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] text-foreground">
+      <DialogContent className="sm:max-w-[425px] text-foreground printable-area">
         <DialogHeader>
           <DialogTitle>فاتورة البيع</DialogTitle>
         </DialogHeader>
-        <div className="print-container">
-          <div style={{ display: 'none' }}>
-            <ReceiptToPrint ref={componentRef} sale={sale} />
-          </div>
-          <div className="p-8 font-sans">
-              <h2 className="text-2xl font-bold text-center mb-4">فاتورة البيع</h2>
-              <p className="text-center mb-6">{((sale as Sale).date ? new Date((sale as Sale).date) : new Date()).toLocaleString('ar-DZ')}</p>
-              <Separator className="my-4" />
-              <div className="space-y-2 mb-4">
-                  {(sale.cart || sale.items || []).map((item) => (
-                      <div key={item.id} className="flex justify-between">
-                          <span className="truncate max-w-[200px]">{item.name} ({item.cartQuantity})</span>
-                          <span>${(item.price * item.cartQuantity).toFixed(2)}</span>
-                      </div>
-                  ))}
-              </div>
-              <Separator className="my-4" />
-              <div className="flex justify-between font-bold text-lg">
-                  <span>المجموع</span>
-                  <span>${sale.total.toFixed(2)}</span>
-              </div>
-              <p className="text-center mt-8 text-sm">شكرا لزيارتكم!</p>
-          </div>
-        </div>
-        <DialogFooter>
+        <ReceiptContent sale={sale} />
+        <DialogFooter className='pt-4'>
             <Button onClick={handlePrint} className="w-full">
                 <Receipt className="ml-2 h-4 w-4" />
                 طباعة الفاتورة
