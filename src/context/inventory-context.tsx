@@ -21,6 +21,7 @@ interface InventoryContextType {
   repairs: Repair[];
   addProduct: (product: Omit<Product, 'id' | 'purchasePrice'> & { purchasePrice: number }) => void;
   addRepair: (repair: Omit<Repair, 'id' | 'creationDate'>) => void;
+  updateRepairStatus: (repairId: string, status: Repair['status']) => void;
   findProduct: (searchTerm: string) => Product | undefined;
   processSale: (cart: CartItem[]) => void;
   addFunds: (amount: number) => void;
@@ -61,6 +62,28 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       return [...prevRepairs, newRepair];
     });
   }, []);
+  
+  const updateRepairStatus = useCallback((repairId: string, status: Repair['status']) => {
+    setRepairs(prevRepairs => {
+      const updatedRepairs = prevRepairs.map(repair => {
+        if (repair.id === repairId) {
+          const wasCompleted = repair.status === 'Completed';
+          const isNowCompleted = status === 'Completed';
+
+          if (!wasCompleted && isNowCompleted) {
+             toast({
+              title: "اكتمل الإصلاح",
+              description: `تمت إضافة ${repair.cost.toFixed(2)} دولار إلى الربح اليومي.`,
+            });
+          }
+          return { ...repair, status, completionDate: status === 'Completed' ? new Date() : repair.completionDate };
+        }
+        return repair;
+      });
+      return updatedRepairs;
+    });
+  }, [toast]);
+
 
   const findProduct = useCallback((searchTerm: string): Product | undefined => {
     const term = searchTerm.toLowerCase();
@@ -137,21 +160,27 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     const salesProfit = sales
         .filter(sale => isToday(sale.date))
         .reduce((acc, sale) => acc + sale.profit, 0);
+    const repairsProfit = repairs
+        .filter(repair => repair.status === 'Completed' && repair.completionDate && isToday(repair.completionDate))
+        .reduce((acc, repair) => acc + repair.cost, 0);
     const fundsToday = manualFunds
         .filter(fund => isToday(fund.date))
         .reduce((acc, fund) => acc + fund.amount, 0);
-    return salesProfit + fundsToday;
-  }, [sales, manualFunds]);
+    return salesProfit + repairsProfit + fundsToday;
+  }, [sales, repairs, manualFunds]);
 
   const monthlyProfit = useMemo(() => {
      const salesProfit = sales
         .filter(sale => isThisMonth(sale.date))
         .reduce((acc, sale) => acc + sale.profit, 0);
+    const repairsProfit = repairs
+        .filter(repair => repair.status === 'Completed' && repair.completionDate && isThisMonth(repair.completionDate))
+        .reduce((acc, repair) => acc + repair.cost, 0);
     const fundsThisMonth = manualFunds
         .filter(fund => isThisMonth(fund.date))
         .reduce((acc, fund) => acc + fund.amount, 0);
-    return salesProfit + fundsThisMonth;
-  }, [sales, manualFunds]);
+    return salesProfit + repairsProfit + fundsThisMonth;
+  }, [sales, repairs, manualFunds]);
 
   const totalManualFunds = useMemo(() => {
     return manualFunds.reduce((acc, fund) => acc + fund.amount, 0);
@@ -159,18 +188,18 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
   const totalRevenue = useMemo(() => {
     const salesRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
-    return salesRevenue + totalManualFunds;
-  }, [sales, totalManualFunds]);
+    const repairsRevenue = repairs.filter(r => r.status === 'Completed').reduce((acc, repair) => acc + repair.cost, 0);
+    return salesRevenue + repairsRevenue + totalManualFunds;
+  }, [sales, repairs, totalManualFunds]);
 
   const capital = useMemo(() => {
     const inventoryValue = products.reduce((acc, product) => acc + (product.purchasePrice * product.quantity), 0);
-    const salesRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
-    return inventoryValue + totalManualFunds + (salesRevenue - costOfGoodsSold);
-  }, [products, sales, totalManualFunds, costOfGoodsSold]);
+    return inventoryValue + totalRevenue - costOfGoodsSold;
+  }, [products, totalRevenue, costOfGoodsSold]);
 
 
   return (
-    <InventoryContext.Provider value={{ products, sales, repairs, addProduct, addRepair, findProduct, processSale, addFunds, capital, dailyProfit, monthlyProfit, totalRevenue, costOfGoodsSold }}>
+    <InventoryContext.Provider value={{ products, sales, repairs, addProduct, addRepair, updateRepairStatus, findProduct, processSale, addFunds, capital, dailyProfit, monthlyProfit, totalRevenue, costOfGoodsSold }}>
       {children}
     </InventoryContext.Provider>
   );

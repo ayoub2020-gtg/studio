@@ -23,9 +23,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function RepairsClient() {
-  const { repairs } = useInventory();
+  const { repairs, updateRepairStatus } = useInventory();
   const [isAddRepairOpen, setAddRepairOpen] = useState(false);
 
   const getStatusVariant = (status: Repair['status']) => {
@@ -41,6 +42,10 @@ export function RepairsClient() {
       default:
         return 'default';
     }
+  };
+
+  const handleStatusChange = (repairId: string, status: Repair['status']) => {
+    updateRepairStatus(repairId, status);
   };
 
   return (
@@ -93,9 +98,27 @@ export function RepairsClient() {
                     </TableCell>
                     <TableCell>${repair.cost.toFixed(2)}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusVariant(repair.status)}>
-                        {repair.status}
-                      </Badge>
+                       <Select
+                        defaultValue={repair.status}
+                        onValueChange={(value) => handleStatusChange(repair.id, value as Repair['status'])}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue>
+                             <Badge variant={getStatusVariant(repair.status)} className="w-fit">
+                              {repair.status === 'Pending' && 'قيد الانتظار'}
+                              {repair.status === 'In Progress' && 'قيد التنفيذ'}
+                              {repair.status === 'Completed' && 'مكتمل'}
+                              {repair.status === 'Cancelled' && 'ملغى'}
+                            </Badge>
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pending">قيد الانتظار</SelectItem>
+                          <SelectItem value="In Progress">قيد التنفيذ</SelectItem>
+                          <SelectItem value="Completed">مكتمل</SelectItem>
+                          <SelectItem value="Cancelled">ملغى</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       {new Date(repair.creationDate).toLocaleDateString('ar-DZ')}
