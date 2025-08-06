@@ -64,6 +64,9 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   }, []);
   
   const updateRepairStatus = useCallback((repairId: string, status: Repair['status']) => {
+    let repairCost = 0;
+    let shouldToast = false;
+
     setRepairs(prevRepairs => {
       const updatedRepairs = prevRepairs.map(repair => {
         if (repair.id === repairId) {
@@ -71,10 +74,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           const isNowCompleted = status === 'Completed';
 
           if (!wasCompleted && isNowCompleted) {
-             toast({
-              title: "اكتمل الإصلاح",
-              description: `تمت إضافة ${repair.cost.toFixed(2)} دولار إلى الربح اليومي.`,
-            });
+             shouldToast = true;
+             repairCost = repair.cost;
           }
           return { ...repair, status, completionDate: status === 'Completed' ? new Date() : repair.completionDate };
         }
@@ -82,6 +83,13 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       });
       return updatedRepairs;
     });
+
+    if (shouldToast) {
+       toast({
+        title: "اكتمل الإصلاح",
+        description: `تمت إضافة ${repairCost.toFixed(2)} دولار إلى الربح اليومي.`,
+      });
+    }
   }, [toast]);
 
 
