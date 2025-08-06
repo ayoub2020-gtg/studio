@@ -16,6 +16,7 @@ interface InventoryContextType {
   addProduct: (product: Omit<Product, 'id' | 'purchasePrice'> & { purchasePrice: number }) => void;
   findProduct: (searchTerm: string) => Product | undefined;
   processSale: (cart: CartItem[]) => void;
+  addFunds: (amount: number) => void;
   capital: number;
   dailyProfit: number;
   monthlyProfit: number;
@@ -28,6 +29,7 @@ const InventoryContext = createContext<InventoryContextType | undefined>(undefin
 export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [sales, setSales] = useState<Sale[]>([]);
+  const [manualFunds, setManualFunds] = useState(0);
   const { toast } = useToast();
 
   const addProduct = useCallback((newProductData: Omit<Product, 'id' | 'purchasePrice'> & { purchasePrice: number }) => {
@@ -101,10 +103,17 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     })
 
   }, [toast]);
+  
+  const addFunds = useCallback((amount: number) => {
+    if (amount > 0) {
+        setManualFunds(prevFunds => prevFunds + amount);
+    }
+  }, []);
 
   const capital = useMemo(() => {
-    return products.reduce((acc, product) => acc + (product.purchasePrice * product.quantity), 0);
-  }, [products]);
+    const inventoryValue = products.reduce((acc, product) => acc + (product.purchasePrice * product.quantity), 0);
+    return inventoryValue + manualFunds;
+  }, [products, manualFunds]);
 
   const dailyProfit = useMemo(() => {
     return sales
@@ -128,7 +137,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
 
   return (
-    <InventoryContext.Provider value={{ products, sales, addProduct, findProduct, processSale, capital, dailyProfit, monthlyProfit, totalRevenue, costOfGoodsSold }}>
+    <InventoryContext.Provider value={{ products, sales, addProduct, findProduct, processSale, addFunds, capital, dailyProfit, monthlyProfit, totalRevenue, costOfGoodsSold }}>
       {children}
     </InventoryContext.Provider>
   );

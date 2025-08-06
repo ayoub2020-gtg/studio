@@ -2,20 +2,24 @@
 
 import { useInventory } from '@/context/inventory-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Package, TrendingUp, AlertCircle, ShoppingCart, ListChecks, Printer, Archive, CircleDollarSign, PackageSearch } from 'lucide-react';
+import { DollarSign, Package, TrendingUp, AlertCircle, ShoppingCart, ListChecks, Printer, Archive, CircleDollarSign, PackageSearch, PlusCircle } from 'lucide-react';
 import type { Product, Sale } from '@/lib/inventory';
 import { ReceiptDialog } from './pos/receipt-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 export function DashboardClient() {
-  const { capital, dailyProfit, monthlyProfit, products, sales, totalRevenue, costOfGoodsSold } = useInventory();
+  const { capital, dailyProfit, monthlyProfit, products, sales, totalRevenue, costOfGoodsSold, addFunds } = useInventory();
+  const { toast } = useToast();
   
   const latestSalesRef = useRef<HTMLDivElement>(null);
   const wantedProductsRef = useRef<HTMLDivElement>(null);
+  const [fundsToAdd, setFundsToAdd] = useState(0);
 
   const lowStockProducts = products.filter(p => p.quantity < 2);
   const recentSales = sales.slice(-5).reverse();
@@ -33,11 +37,22 @@ export function DashboardClient() {
         }
     }
   };
+  
+  const handleAddFunds = () => {
+    if (fundsToAdd > 0) {
+        addFunds(fundsToAdd);
+        toast({
+            title: 'تم إضافة الأموال',
+            description: `تمت إضافة ${fundsToAdd.toFixed(2)} دولار إلى رأس المال.`,
+        });
+        setFundsToAdd(0);
+    }
+  };
 
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <div className="lg:col-span-3 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-4 lg:grid-cols-4">
+      <div className="lg:col-span-4 grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">رأس المال</CardTitle>
@@ -46,7 +61,7 @@ export function DashboardClient() {
             <CardContent>
             <div className="text-2xl font-bold">${capital.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-                القيمة الإجمالية للمخزون
+                القيمة الإجمالية للمخزون والأموال
             </p>
             </CardContent>
         </Card>
@@ -102,6 +117,29 @@ export function DashboardClient() {
                 </p>
             </CardContent>
         </Card>
+        <Card>
+            <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <PlusCircle className="h-4 w-4 text-muted-foreground" />
+                    إضافة أموال
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col justify-between h-[calc(100%-4rem)]">
+                <div className='flex gap-2 items-center'>
+                    <Input 
+                        type="number" 
+                        value={fundsToAdd}
+                        onChange={(e) => setFundsToAdd(parseFloat(e.target.value) || 0)}
+                        placeholder="0.00"
+                        className="h-9"
+                    />
+                     <span className="font-bold text-muted-foreground">$</span>
+                </div>
+                <Button size="sm" className="w-full mt-2" onClick={handleAddFunds}>
+                    إضافة إلى رأس المال
+                </Button>
+            </CardContent>
+        </Card>
       </div>
 
       <div className="lg:col-span-2">
@@ -153,7 +191,7 @@ export function DashboardClient() {
         </Card>
       </div>
 
-      <div>
+      <div className="lg:col-span-2">
         <Card ref={wantedProductsRef}>
           <CardHeader className='flex-row items-center justify-between'>
             <CardTitle className="flex items-center gap-2">
