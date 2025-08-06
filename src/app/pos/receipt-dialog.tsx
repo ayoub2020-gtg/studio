@@ -12,23 +12,27 @@ interface CartItem extends Product {
   cartQuantity: number;
 }
 
-interface ReceiptDialogProps {
-  sale: {
-    cart: CartItem[];
+interface SaleLike {
+    items?: CartItem[];
+    cart?: CartItem[];
     total: number;
-  };
+}
+
+interface ReceiptDialogProps {
+  sale: SaleLike;
 }
 
 class ReceiptToPrint extends React.Component<ReceiptDialogProps> {
     render() {
         const { sale } = this.props;
+        const items = sale.cart || sale.items || [];
         return (
             <div className="p-8 font-sans text-black">
                 <h2 className="text-2xl font-bold text-center mb-4">فاتورة البيع</h2>
                 <p className="text-center mb-6">{new Date().toLocaleString('ar-DZ')}</p>
                 <Separator className="my-4 bg-gray-400" />
                 <div className="space-y-2 mb-4">
-                    {sale.cart.map((item) => (
+                    {items.map((item) => (
                         <div key={item.id} className="flex justify-between">
                             <span className="truncate max-w-[200px]">{item.name} ({item.cartQuantity})</span>
                             <span>${(item.price * item.cartQuantity).toFixed(2)}</span>
