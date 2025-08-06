@@ -34,7 +34,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <SidebarHeader>
             <div className="flex items-center gap-2">
               <Logo className="size-7 text-accent" />
-              <span className="text-lg font-semibold">ساري</span>
+              <span className="text-lg font-semibold">كولومبوس</span>
             </div>
           </SidebarHeader>
           <SidebarMenu>

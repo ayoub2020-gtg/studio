@@ -5,7 +5,7 @@ import { InventoryProvider } from '@/context/inventory-context';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'مدير مخزون ساري',
+  title: 'Columbus for mobile repair',
   description: 'تطبيق لإدارة المخزون يشبه تطبيقات سطح المكتب.',
 };
 
