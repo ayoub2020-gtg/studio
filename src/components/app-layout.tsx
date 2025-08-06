@@ -9,19 +9,18 @@ import {
   SidebarContent,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Home, Package, PackagePlus, PanelLeft } from 'lucide-react';
+import { Home, Package, PackagePlus, PanelLeft, LayoutDashboard, ShoppingCart } from 'lucide-react';
 import React from 'react';
+import { SidebarInset, SidebarTrigger } from './ui/sidebar';
 
 const menuItems = [
-  { href: '/', label: 'POS', icon: Home },
-  { href: '/inventory', label: 'Inventory', icon: Package },
-  { href: '/inventory/add', label: 'Add Product', icon: PackagePlus },
+  { href: '/', label: 'لوحة التحكم', icon: LayoutDashboard },
+  { href: '/pos', label: 'نقطة البيع', icon: ShoppingCart },
+  { href: '/inventory', label: 'المخزون', icon: Package },
+  { href: '/inventory/add', label: 'إضافة منتج', icon: PackagePlus },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -29,12 +28,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar side="right">
         <SidebarContent>
           <SidebarHeader>
             <div className="flex items-center gap-2">
               <Logo className="size-7 text-accent" />
-              <span className="text-lg font-semibold">Sari</span>
+              <span className="text-lg font-semibold">ساري</span>
             </div>
           </SidebarHeader>
           <SidebarMenu>

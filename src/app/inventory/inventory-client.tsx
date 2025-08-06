@@ -16,11 +16,11 @@ export function InventoryClient() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="hidden w-[100px] sm:table-cell">Image</TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Category</TableHead>
-          <TableHead className="text-right">Price</TableHead>
-          <TableHead className="text-right">Stock</TableHead>
+          <TableHead className="hidden w-[100px] sm:table-cell">صورة</TableHead>
+          <TableHead>الاسم</TableHead>
+          <TableHead>الفئة</TableHead>
+          <TableHead className="text-right">السعر</TableHead>
+          <TableHead className="text-right">المخزون</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -59,23 +59,27 @@ export function InventoryClient() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Products</CardTitle>
+        <CardTitle>المنتجات</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="all">
+        <Tabs defaultValue="all" dir="rtl">
           <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="phone">Phone Accessories & Parts</TabsTrigger>
+            <TabsTrigger value="all">الكل</TabsTrigger>
+            <TabsTrigger value="general">عام</TabsTrigger>
+            <TabsTrigger value="spare_parts">قطع غيار</TabsTrigger>
+            <TabsTrigger value="accessories">إكسسوارات</TabsTrigger>
           </TabsList>
           <TabsContent value="all">
             {renderProductTable(products)}
           </TabsContent>
           <TabsContent value="general">
-            {renderProductTable(products.filter(p => p.category === 'General'))}
+            {renderProductTable(products.filter(p => p.category === 'عام'))}
           </TabsContent>
-          <TabsContent value="phone">
-            {renderProductTable(products.filter(p => p.category === 'Phone Accessories & Parts'))}
+          <TabsContent value="spare_parts">
+            {renderProductTable(products.filter(p => p.category === 'قطع غيار الهواتف'))}
+          </TabsContent>
+           <TabsContent value="accessories">
+            {renderProductTable(products.filter(p => p.category === 'إكسسوارات الهواتف'))}
           </TabsContent>
         </Tabs>
       </CardContent>

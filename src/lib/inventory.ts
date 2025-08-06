@@ -5,79 +5,95 @@ export type Product = {
   description: string;
   quantity: number;
   price: number;
-  category: 'General' | 'Phone Accessories & Parts';
+  purchasePrice: number;
+  category: 'عام' | 'قطع غيار الهواتف' | 'إكسسوارات الهواتف';
   image?: string;
 };
+
+export type Sale = {
+    id: string;
+    items: (Product & { cartQuantity: number })[];
+    total: number;
+    profit: number;
+    date: Date;
+}
 
 export const initialProducts: Product[] = [
   {
     id: '1',
-    name: 'iPhone 13 Screen Replacement',
+    name: 'شاشة بديلة لآيفون 13',
     barcode: '1111111111111',
-    description: 'High-quality OLED screen replacement for iPhone 13.',
+    description: 'شاشة OLED عالية الجودة بديلة لآيفون 13.',
     quantity: 10,
     price: 129.99,
-    category: 'Phone Accessories & Parts',
+    purchasePrice: 90,
+    category: 'قطع غيار الهواتف',
     image: 'https://placehold.co/400x400.png',
   },
   {
     id: '2',
-    name: 'Samsung Galaxy S21 Battery',
+    name: 'بطارية سامسونج جالاكسي S21',
     barcode: '2222222222222',
-    description: 'Original replacement battery for Samsung Galaxy S21.',
+    description: 'بطارية بديلة أصلية لسامسونج جالاكسي S21.',
     quantity: 15,
     price: 49.99,
-    category: 'Phone Accessories & Parts',
+    purchasePrice: 30,
+    category: 'قطع غيار الهواتف',
     image: 'https://placehold.co/400x400.png',
   },
   {
     id: '3',
-    name: 'USB-C Charging Cable',
+    name: 'كابل شحن USB-C',
     barcode: '3333333333333',
-    description: '3ft braided USB-C to USB-A charging cable.',
+    description: 'كابل شحن مجدول بطول 1 متر USB-C إلى USB-A.',
     quantity: 50,
     price: 12.50,
-    category: 'Phone Accessories & Parts',
+    purchasePrice: 5,
+    category: 'إكسسوارات الهواتف',
     image: 'https://placehold.co/400x400.png',
   },
   {
     id: '4',
-    name: 'Generic Smartphone Case',
+    name: 'جراب هاتف ذكي عام',
     barcode: '4444444444444',
-    description: 'Clear TPU protective case for various smartphone models.',
+    description: 'جراب حماية شفاف من مادة TPU لمختلف موديلات الهواتف الذكية.',
     quantity: 1,
     price: 9.99,
-    category: 'Phone Accessories & Parts',
+    purchasePrice: 3,
+    category: 'إكسسوارات الهواتف',
     image: 'https://placehold.co/400x400.png',
   },
   {
     id: '5',
-    name: 'Premium Soda Can',
+    name: 'علبة صودا فاخرة',
     barcode: '5555555555555',
-    description: 'A refreshing can of premium soda.',
+    description: 'علبة منعشة من الصودا الفاخرة.',
     quantity: 100,
     price: 1.99,
-    category: 'General',
+    purchasePrice: 0.5,
+    category: 'عام',
     image: 'https://placehold.co/400x400.png',
   },
   {
     id: '6',
-    name: 'Gourmet Coffee Beans',
+    name: 'حبوب بن جورميه',
     barcode: '6666666666666',
-    description: '1lb bag of whole bean, dark roast coffee.',
+    description: 'كيس 1 رطل من حبوب البن الكاملة المحمصة الداكنة.',
     quantity: 30,
     price: 18.00,
-    category: 'General',
+    purchasePrice: 10,
+    category: 'عام',
     image: 'https://placehold.co/400x400.png',
   },
   {
     id: '7',
-    name: 'Artisanal Bread Loaf',
+    name: 'رغيف خبز حرفي',
     barcode: '7777777777777',
-    description: 'Freshly baked sourdough bread.',
+    description: 'خبز العجين المخمر المخبوز طازجًا.',
     quantity: 1,
     price: 7.50,
-    category: 'General',
+    purchasePrice: 2.5,
+    category: 'عام',
     image: 'https://placehold.co/400x400.png',
   }
 ];

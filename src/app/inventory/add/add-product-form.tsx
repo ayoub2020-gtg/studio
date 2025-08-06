@@ -19,12 +19,13 @@ import { generateProductImage } from '@/ai/flows/generate-product-image';
 import { Wand2, Loader2, RefreshCw } from 'lucide-react';
 
 const productSchema = z.object({
-  name: z.string().min(3, { message: "Product name must be at least 3 characters." }),
+  name: z.string().min(3, { message: "يجب أن يكون اسم المنتج 3 أحرف على الأقل." }),
   barcode: z.string().optional(),
-  description: z.string().min(10, { message: "Description must be at least 10 characters." }),
-  quantity: z.coerce.number().int().min(0, { message: "Quantity cannot be negative." }),
-  price: z.coerce.number().min(0, { message: "Price cannot be negative." }),
-  category: z.enum(['General', 'Phone Accessories & Parts']),
+  description: z.string().min(10, { message: "يجب أن يكون الوصف 10 أحرف على الأقل." }),
+  quantity: z.coerce.number().int().min(0, { message: "لا يمكن أن تكون الكمية سالبة." }),
+  price: z.coerce.number().min(0, { message: "لا يمكن أن يكون السعر سالبًا." }),
+  purchasePrice: z.coerce.number().min(0, { message: "لا يمكن أن يكون سعر الشراء سالبًا." }),
+  category: z.enum(['عام', 'قطع غيار الهواتف', 'إكسسوارات الهواتف']),
   image: z.string().optional(),
 });
 
@@ -44,7 +45,8 @@ export function AddProductForm() {
       description: '',
       quantity: 0,
       price: 0.0,
-      category: 'General',
+      purchasePrice: 0.0,
+      category: 'عام',
       image: '',
     },
   });
@@ -59,8 +61,8 @@ export function AddProductForm() {
     if (!productName || !productDescription) {
       toast({
         variant: 'destructive',
-        title: 'Cannot Generate Image',
-        description: 'Please provide a product name and description first.',
+        title: 'لا يمكن إنشاء صورة',
+        description: 'يرجى تقديم اسم المنتج ووصفه أولاً.',
       });
       return;
     }
@@ -70,13 +72,13 @@ export function AddProductForm() {
       const result = await generateProductImage({ productName, productDescription });
       if (result.imageUrl) {
         form.setValue('image', result.imageUrl);
-        toast({ title: 'Image Generated Successfully' });
+        toast({ title: 'تم إنشاء الصورة بنجاح' });
       }
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Image Generation Failed',
-        description: 'Could not generate an image. Please try again.',
+        title: 'فشل إنشاء الصورة',
+        description: 'لا يمكن إنشاء صورة. يرجى المحاولة مرة أخرى.',
       });
     } finally {
       setIsGeneratingImage(false);
@@ -90,8 +92,8 @@ export function AddProductForm() {
     }
     addProduct(finalData);
     toast({
-      title: 'Product Added',
-      description: `${data.name} has been successfully added to the inventory.`,
+      title: 'تمت إضافة المنتج',
+      description: `تمت إضافة ${data.name} بنجاح إلى المخزون.`,
     });
     router.push('/inventory');
   };
@@ -103,7 +105,7 @@ export function AddProductForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <Card>
           <CardHeader>
-            <CardTitle>Product Details</CardTitle>
+            <CardTitle>تفاصيل المنتج</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
             <div className="space-y-4">
@@ -112,9 +114,9 @@ export function AddProductForm() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Name</FormLabel>
+                    <FormLabel>اسم المنتج</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., iPhone 14 Pro Case" {...field} />
+                      <Input placeholder="مثال: جراب آيفون 14 برو" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -125,13 +127,13 @@ export function AddProductForm() {
                 name="barcode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Barcode (optional)</FormLabel>
+                    <FormLabel>الباركود (اختياري)</FormLabel>
                     <div className="flex gap-2">
                       <FormControl>
-                        <Input placeholder="Scan or enter barcode" {...field} />
+                        <Input placeholder="امسح أو أدخل الباركود" {...field} />
                       </FormControl>
                       <Button type="button" variant="outline" onClick={handleGenerateBarcode}>
-                        <RefreshCw className="mr-2 h-4 w-4" /> Generate
+                        <RefreshCw className="ml-2 h-4 w-4" /> إنشاء
                       </Button>
                     </div>
                     <FormMessage />
@@ -143,9 +145,9 @@ export function AddProductForm() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>الوصف</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Detailed product description..." {...field} />
+                      <Textarea placeholder="وصف مفصل للمنتج..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -159,7 +161,20 @@ export function AddProductForm() {
                     name="price"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Price</FormLabel>
+                        <FormLabel>سعر البيع</FormLabel>
+                        <FormControl>
+                            <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                     <FormField
+                    control={form.control}
+                    name="purchasePrice"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>سعر الشراء</FormLabel>
                         <FormControl>
                             <Input type="number" step="0.01" placeholder="0.00" {...field} />
                         </FormControl>
@@ -172,7 +187,7 @@ export function AddProductForm() {
                     name="quantity"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Stock Quantity</FormLabel>
+                        <FormLabel>كمية المخزون</FormLabel>
                         <FormControl>
                             <Input type="number" placeholder="0" {...field} />
                         </FormControl>
@@ -186,16 +201,17 @@ export function AddProductForm() {
                 name="category"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>الفئة</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
+                            <SelectValue placeholder="اختر فئة" />
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                        <SelectItem value="General">General</SelectItem>
-                        <SelectItem value="Phone Accessories & Parts">Phone Accessories & Parts</SelectItem>
+                          <SelectItem value="عام">عام</SelectItem>
+                          <SelectItem value="قطع غيار الهواتف">قطع غيار الهواتف</SelectItem>
+                          <SelectItem value="إكسسوارات الهواتف">إكسسوارات الهواتف</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -204,14 +220,14 @@ export function AddProductForm() {
                 />
                 <Card className="overflow-hidden">
                     <CardHeader className="p-2 sm:p-4">
-                        <FormLabel>Product Image</FormLabel>
+                        <FormLabel>صورة المنتج</FormLabel>
                     </CardHeader>
                     <CardContent className="p-2 sm:p-4 pt-0">
                         <div className="aspect-square relative bg-muted rounded-md flex items-center justify-center">
                             {imageUrl ? (
                                 <Image src={imageUrl} alt="Generated product" layout="fill" objectFit="cover" className="rounded-md" />
                             ) : (
-                                <span className="text-sm text-muted-foreground">No Image</span>
+                                <span className="text-sm text-muted-foreground">لا توجد صورة</span>
                             )}
                             {isGeneratingImage && (
                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-md">
@@ -220,8 +236,8 @@ export function AddProductForm() {
                             )}
                         </div>
                          <Button type="button" onClick={handleGenerateImage} disabled={isGeneratingImage} className="w-full mt-2">
-                          {isGeneratingImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                          Generate with AI
+                          {isGeneratingImage ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Wand2 className="ml-2 h-4 w-4" />}
+                          إنشاء باستخدام الذكاء الاصطناعي
                         </Button>
                     </CardContent>
                 </Card>
@@ -230,7 +246,7 @@ export function AddProductForm() {
           </CardContent>
         </Card>
         <div className="flex justify-end">
-          <Button type="submit" size="lg">Add Product</Button>
+          <Button type="submit" size="lg">إضافة منتج</Button>
         </div>
       </form>
     </Form>
