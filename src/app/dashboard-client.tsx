@@ -99,7 +99,7 @@ export function DashboardClient() {
             <CardContent>
                 <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
                 <p className="text-xs text-muted-foreground">
-                    إجمالي الأموال المستردة من المبيعات
+                    إجمالي الأموال من المبيعات والمصادر الأخرى
                 </p>
             </CardContent>
         </Card>

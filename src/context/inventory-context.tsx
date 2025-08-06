@@ -110,10 +110,15 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const costOfGoodsSold = useMemo(() => {
+    return sales.reduce((acc, sale) => acc + (sale.cost || 0), 0);
+  }, [sales]);
+
   const capital = useMemo(() => {
     const inventoryValue = products.reduce((acc, product) => acc + (product.purchasePrice * product.quantity), 0);
-    return inventoryValue + manualFunds;
-  }, [products, manualFunds]);
+    const salesRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
+    return inventoryValue + manualFunds + (salesRevenue - costOfGoodsSold);
+  }, [products, sales, manualFunds, costOfGoodsSold]);
 
   const dailyProfit = useMemo(() => {
     return sales
@@ -128,12 +133,9 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   }, [sales]);
 
   const totalRevenue = useMemo(() => {
-    return sales.reduce((acc, sale) => acc + sale.total, 0);
-  }, [sales]);
-
-  const costOfGoodsSold = useMemo(() => {
-    return sales.reduce((acc, sale) => acc + (sale.cost || 0), 0);
-  }, [sales]);
+    const salesRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
+    return salesRevenue + manualFunds;
+  }, [sales, manualFunds]);
 
 
   return (
