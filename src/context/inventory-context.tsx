@@ -12,6 +12,7 @@ interface CartItem extends Product {
 
 interface InventoryContextType {
   products: Product[];
+  sales: Sale[];
   addProduct: (product: Omit<Product, 'id' | 'purchasePrice'> & { purchasePrice: number }) => void;
   findProduct: (searchTerm: string) => Product | undefined;
   processSale: (cart: CartItem[]) => void;
@@ -113,7 +114,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   }, [sales]);
 
   return (
-    <InventoryContext.Provider value={{ products, addProduct, findProduct, processSale, capital, dailyProfit, monthlyProfit }}>
+    <InventoryContext.Provider value={{ products, sales, addProduct, findProduct, processSale, capital, dailyProfit, monthlyProfit }}>
       {children}
     </InventoryContext.Provider>
   );
