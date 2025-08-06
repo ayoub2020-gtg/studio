@@ -19,6 +19,7 @@ interface InventoryContextType {
   capital: number;
   dailyProfit: number;
   monthlyProfit: number;
+  totalRevenue: number;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -113,8 +114,12 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
         .reduce((acc, sale) => acc + sale.profit, 0);
   }, [sales]);
 
+  const totalRevenue = useMemo(() => {
+    return sales.reduce((acc, sale) => acc + sale.total, 0);
+  }, [sales]);
+
   return (
-    <InventoryContext.Provider value={{ products, sales, addProduct, findProduct, processSale, capital, dailyProfit, monthlyProfit }}>
+    <InventoryContext.Provider value={{ products, sales, addProduct, findProduct, processSale, capital, dailyProfit, monthlyProfit, totalRevenue }}>
       {children}
     </InventoryContext.Provider>
   );
