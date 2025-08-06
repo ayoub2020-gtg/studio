@@ -10,6 +10,11 @@ interface CartItem extends Product {
   cartQuantity: number;
 }
 
+interface ManualFund {
+    amount: number;
+    date: Date;
+}
+
 interface InventoryContextType {
   products: Product[];
   sales: Sale[];
@@ -29,7 +34,7 @@ const InventoryContext = createContext<InventoryContextType | undefined>(undefin
 export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [sales, setSales] = useState<Sale[]>([]);
-  const [manualFunds, setManualFunds] = useState(0);
+  const [manualFunds, setManualFunds] = useState<ManualFund[]>([]);
   const { toast } = useToast();
 
   const addProduct = useCallback((newProductData: Omit<Product, 'id' | 'purchasePrice'> & { purchasePrice: number }) => {
@@ -106,7 +111,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   
   const addFunds = useCallback((amount: number) => {
     if (amount > 0) {
-        setManualFunds(prevFunds => prevFunds + amount);
+        setManualFunds(prevFunds => [...prevFunds, { amount, date: new Date() }]);
     }
   }, []);
 
@@ -114,28 +119,40 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     return sales.reduce((acc, sale) => acc + (sale.cost || 0), 0);
   }, [sales]);
 
-  const capital = useMemo(() => {
-    const inventoryValue = products.reduce((acc, product) => acc + (product.purchasePrice * product.quantity), 0);
-    const salesRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
-    return inventoryValue + manualFunds + (salesRevenue - costOfGoodsSold);
-  }, [products, sales, manualFunds, costOfGoodsSold]);
-
   const dailyProfit = useMemo(() => {
-    return sales
+    const salesProfit = sales
         .filter(sale => isToday(sale.date))
         .reduce((acc, sale) => acc + sale.profit, 0);
-  }, [sales]);
+    const fundsToday = manualFunds
+        .filter(fund => isToday(fund.date))
+        .reduce((acc, fund) => acc + fund.amount, 0);
+    return salesProfit + fundsToday;
+  }, [sales, manualFunds]);
 
   const monthlyProfit = useMemo(() => {
-     return sales
+     const salesProfit = sales
         .filter(sale => isThisMonth(sale.date))
         .reduce((acc, sale) => acc + sale.profit, 0);
-  }, [sales]);
+    const fundsThisMonth = manualFunds
+        .filter(fund => isThisMonth(fund.date))
+        .reduce((acc, fund) => acc + fund.amount, 0);
+    return salesProfit + fundsThisMonth;
+  }, [sales, manualFunds]);
+
+  const totalManualFunds = useMemo(() => {
+    return manualFunds.reduce((acc, fund) => acc + fund.amount, 0);
+  }, [manualFunds]);
 
   const totalRevenue = useMemo(() => {
     const salesRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
-    return salesRevenue + manualFunds;
-  }, [sales, manualFunds]);
+    return salesRevenue + totalManualFunds;
+  }, [sales, totalManualFunds]);
+
+  const capital = useMemo(() => {
+    const inventoryValue = products.reduce((acc, product) => acc + (product.purchasePrice * product.quantity), 0);
+    const salesRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
+    return inventoryValue + totalManualFunds + (salesRevenue - costOfGoodsSold);
+  }, [products, sales, totalManualFunds, costOfGoodsSold]);
 
 
   return (
