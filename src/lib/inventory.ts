@@ -15,6 +15,7 @@ export type Sale = {
     items: (Product & { cartQuantity: number })[];
     total: number;
     profit: number;
+    cost: number;
     date: Date;
 }
 

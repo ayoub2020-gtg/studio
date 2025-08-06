@@ -20,6 +20,7 @@ interface InventoryContextType {
   dailyProfit: number;
   monthlyProfit: number;
   totalRevenue: number;
+  costOfGoodsSold: number;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -50,6 +51,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   const processSale = useCallback((cart: CartItem[]) => {
     let lowStockItems: string[] = [];
     let saleProfit = 0;
+    let saleCost = 0;
 
     setProducts(prevProducts => {
       const updatedProducts = [...prevProducts];
@@ -61,6 +63,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           updatedProducts[productIndex].quantity = newQuantity;
 
           saleProfit += (product.price - product.purchasePrice) * cartItem.cartQuantity;
+          saleCost += product.purchasePrice * cartItem.cartQuantity;
 
           if (newQuantity < 2) {
             lowStockItems.push(product.name);
@@ -75,6 +78,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
         items: cart,
         total: cart.reduce((acc, item) => acc + item.price * item.cartQuantity, 0),
         profit: saleProfit,
+        cost: saleCost,
         date: new Date(),
     }
     setSales(prevSales => [...prevSales, newSale]);
@@ -118,8 +122,13 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     return sales.reduce((acc, sale) => acc + sale.total, 0);
   }, [sales]);
 
+  const costOfGoodsSold = useMemo(() => {
+    return sales.reduce((acc, sale) => acc + (sale.cost || 0), 0);
+  }, [sales]);
+
+
   return (
-    <InventoryContext.Provider value={{ products, sales, addProduct, findProduct, processSale, capital, dailyProfit, monthlyProfit, totalRevenue }}>
+    <InventoryContext.Provider value={{ products, sales, addProduct, findProduct, processSale, capital, dailyProfit, monthlyProfit, totalRevenue, costOfGoodsSold }}>
       {children}
     </InventoryContext.Provider>
   );
